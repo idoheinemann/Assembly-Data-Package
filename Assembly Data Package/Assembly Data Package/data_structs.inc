@@ -365,6 +365,8 @@ list_delete_at PROC, list:DWORD, index:DWORD
 	add ecx,index
 	shl ecx,2
 	sub edi,ecx
+	INVOKE Free,[ebx]
+	mov ebx,list
 	mov [ebx],edi
 	dec DWORD PTR [ebx+4]
 	popa
