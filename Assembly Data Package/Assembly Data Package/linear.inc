@@ -88,10 +88,34 @@ matrix_set_element PROC,mat:DWORD,row:DWORD,col:DWORD,value:DWORD
 matrix_set_element ENDP
 
 matrix_set_row PROC,mat:DWORD,row:DWORD,reprow:DWORD
-	
-
+	pusha
+	invoke matrix_get_row,mat,row
+	mov ecx,mat
+	mov ecx,[ecx+8]
+	push cs
+	pop es
+	mov edi,eax
+	mov esi,reprow
+	rep movsd
+	popa
 	ret
 matrix_set_row ENDP
+
+matrix_load PROC,src:DWORD,dst:DWORD
+	push eax
+	push ecx
+	mov ecx,src
+	mov ecx,[ecx+4]
+	the_loop:
+		dec ecx
+		invoke matrix_get_row,dst,ecx
+		invoke matrix_set_row,mat,ecx,eax
+		inc ecx
+	loop the_loop
+	pop ecx
+	pop eax
+	ret
+matrix_load endp
 
 matrix_add PROC,dst:DWORD,src:DWORD ; +=
 	pusha
@@ -118,6 +142,7 @@ matrix_add PROC,dst:DWORD,src:DWORD ; +=
 		jnz inner_loop
 		pop ecx
 	loop outer_loop
+	pop edx
 	popa
 	ret
 matrix_add ENDP
@@ -125,7 +150,7 @@ matrix_add ENDP
 matrix_plus PROC,src:DWORD,dst:DWORD ; +, returns a pointer to the new martrix
 	mov eax,src
 	invoke new_matrix,[eax+4],[eax+8]
-	invoke matrix_add,eax,src
+	invoke matrix_load,eax,src
 	invoke matrix_add,eax,dst
 	ret
 matrix_plus ENDP
@@ -155,6 +180,7 @@ matrix_sub PROC,dst:DWORD,src:DWORD ; -=
 		jnz inner_loop
 		pop ecx
 	loop outer_loop
+	pop edx
 	popa
 	ret
 matrix_sub ENDP
@@ -162,7 +188,7 @@ matrix_sub ENDP
 matrix_minus PROC,src:DWORD,dst:DWORD ; -, returns a pointer to the new martrix
 	mov eax,src
 	invoke new_matrix,[eax+4],[eax+8]
-	invoke matrix_add,eax,src
+	invoke matrix_load,eax,src
 	invoke matrix_sub,eax,dst
 	ret
 matrix_minus ENDP
@@ -192,6 +218,7 @@ matrix_elementwize_mul PROC,dst:DWORD,src:DWORD ; *=
 		jnz inner_loop
 		pop ecx
 	loop outer_loop
+	pop edx
 	popa
 	ret
 matrix_elementwize_mul ENDP
@@ -199,7 +226,7 @@ matrix_elementwize_mul ENDP
 matrix_elementwize_times PROC,src:DWORD,dst:DWORD ; *, returns a pointer to the new martrix
 	mov eax,src
 	invoke new_matrix,[eax+4],[eax+8]
-	invoke matrix_add,eax,src
+	invoke matrix_load,eax,src
 	invoke matrix_elementwize_mul,eax,dst
 	ret
 matrix_elementwize_times ENDP
@@ -272,3 +299,79 @@ matrix_mul PROC,mat1:DWORD,mat2:DWORD ; matrix multiplication, returns a new mat
 	pop ebx
 	ret
 matrix_mul endp
+
+matrix_scalar_mul PROC,mat:DWORD,scl:REAL4 ; *= 
+	pusha
+	mov ebx,mat
+	mov ecx,[ebx+4]
+	push DWORD PTR [ebx+8]
+	mov ebx,[ebx]
+	outer_loop:
+		push ecx
+		dec ecx
+		shl ecx,2
+		mov edi,[ebx+ecx]
+		mov edx,[esp+4]
+		inner_loop:
+			push edx
+			dec edx
+			shl edx,2
+			f_mul [edi+edx],scl
+			pop edx
+		dec edx
+		jnz inner_loop
+		pop ecx
+	loop outer_loop
+	pop edx
+	popa
+	ret	
+matrix_scalar_mul ENDP
+
+matrix_scalar_times PROC,mat:DWORD,scl:DWORD ; *, returns a new matrix
+	mov eax,src
+	invoke new_matrix,[eax+4],[eax+8]
+	invoke matrix_load,eax,src
+	invoke matrix_scalar_mul,eax,dst
+	ret
+matrix_scalar_times endp
+
+matrix_elementwize PROC,mat:DWORD,func:DWORD ; function must be stdcall, and take one REAL4 argument; equivelent to matrix = f(matrix)
+	pusha
+	mov ebx,src
+	mov ecx,[ebx+4]
+	push DWORD PTR [ebx+8]
+	mov ebx,[ebx]
+	outer_loop:
+		push ecx
+		dec ecx
+		shl ecx,2
+		mov edi,[ebx+ecx]
+		mov edx,[esp+4]
+		inner_loop:
+			push edx
+			dec edx
+			shl edx,2
+			push edi
+			push edx
+			push REAL4 PTR [edi+edx]
+			call func
+			pop edx
+			pop edi
+			mov [edi+edx],eax
+			pop edx
+		dec edx
+		jnz inner_loop
+		pop ecx
+	loop outer_loop
+	pop edx
+	popa
+	ret
+matrix_elementwize ENDP
+
+matrix_element_function PROC,mat:DWORD,func:DWORD ; function must be stdcall, and take one REAL4 argument; returns f(matrix)
+	mov eax,mat
+	invoke new_matrix,[eax+4],[eax+8]
+	invoke matrix_load,eax,mat
+	invoke matrix_elementwize,eax,func
+	ret
+matrix_element_function endp
