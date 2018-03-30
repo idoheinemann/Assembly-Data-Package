@@ -8,7 +8,7 @@ Matrix STRUCT
 	columns DWORD ?
 Matrix ends
 
-new_matrix PROTO rows:DWORD,columns:DWORD
+zero_matrix PROTO rows:DWORD,columns:DWORD
 
 matrix_get_row PROTO mat:dword,row:DWORD
 
@@ -21,7 +21,7 @@ matrix_set_row PROTO mat:DWORD,row:DWORD,reprow:DWORD
 matrix_add PROTO dst:DWORD,scr:DWORD ; +=
 .code
 
-new_matrix PROC,rows:DWORD,columns:DWORD
+zero_matrix PROC,rows:DWORD,columns:DWORD
 	push ebx
 	push ecx
 	push edx
@@ -51,7 +51,7 @@ new_matrix PROC,rows:DWORD,columns:DWORD
 	pop ecx
 	pop ebx
 	RET
-new_matrix ENDP
+zero_matrix ENDP
 
 matrix_get_row PROC,mat:DWORD,row:DWORD
 	push ebx
@@ -149,7 +149,7 @@ matrix_add ENDP
 
 matrix_plus PROC,src:DWORD,dst:DWORD ; +, returns a pointer to the new martrix
 	mov eax,src
-	invoke new_matrix,[eax+4],[eax+8]
+	invoke zero_matrix,[eax+4],[eax+8]
 	invoke matrix_load,eax,src
 	invoke matrix_add,eax,dst
 	ret
@@ -187,7 +187,7 @@ matrix_sub ENDP
 
 matrix_minus PROC,src:DWORD,dst:DWORD ; -, returns a pointer to the new martrix
 	mov eax,src
-	invoke new_matrix,[eax+4],[eax+8]
+	invoke zero_matrix,[eax+4],[eax+8]
 	invoke matrix_load,eax,src
 	invoke matrix_sub,eax,dst
 	ret
@@ -225,7 +225,7 @@ matrix_elementwize_mul ENDP
 
 matrix_elementwize_times PROC,src:DWORD,dst:DWORD ; *, returns a pointer to the new martrix
 	mov eax,src
-	invoke new_matrix,[eax+4],[eax+8]
+	invoke zero_matrix,[eax+4],[eax+8]
 	invoke matrix_load,eax,src
 	invoke matrix_elementwize_mul,eax,dst
 	ret
@@ -240,7 +240,7 @@ matrix_mul PROC,mat1:DWORD,mat2:DWORD ; matrix multiplication, returns a new mat
 
 	mov ebx,mat1
 	mov ecx,mat2
-	invoke new_matrix,[ebx+4],[ecx+8]
+	invoke zero_matrix,[ebx+4],[ecx+8]
 	push eax
 	push REAL4 ptr 0 ; float sum = 0
 	push DWORD ptr 0; int i = 0
@@ -329,7 +329,7 @@ matrix_scalar_mul ENDP
 
 matrix_scalar_times PROC,mat:DWORD,scl:REAL4 ; *, returns a new matrix
 	mov eax,mat
-	invoke new_matrix,[eax+4],[eax+8]
+	invoke zero_matrix,[eax+4],[eax+8]
 	invoke matrix_load,eax,mat
 	invoke matrix_scalar_mul,eax,scl
 	ret
@@ -370,7 +370,7 @@ matrix_elementwize ENDP
 
 matrix_element_function PROC,mat:DWORD,func:DWORD ; function must be stdcall, and take one REAL4 argument; returns f(matrix)
 	mov eax,mat
-	invoke new_matrix,[eax+4],[eax+8]
+	invoke zero_matrix,[eax+4],[eax+8]
 	invoke matrix_load,eax,mat
 	invoke matrix_elementwize,eax,func
 	ret
@@ -459,3 +459,32 @@ ones_matrix PROC,rows:DWORD,columns:DWORD
 	pop ebx
 	RET
 ones_matrix ENDP
+
+identity_matrix PROC,rows:DWORD,columns:DWORD
+	push ecx
+	push edx
+	
+	invoke zero_matrix,rows,columns
+
+	mov ecx,rows
+	cmp ecx,columns
+	jl afterFoundMin
+		mov ecx,columns
+	afterFoundMin:
+
+	fld1
+	push DWORD PTR 0
+	fstp DWORD PTR [esp]
+	pop edx ; edx = 1.0
+
+	ones_loop:
+		dec ecx
+		invoke matrix_set_element,eax,ecx,ecx,edx
+		inc ecx
+	loop ones_loop
+
+
+	pop edx
+	pop ecx
+	RET
+identity_matrix ENDP
