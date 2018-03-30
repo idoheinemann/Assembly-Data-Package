@@ -1,5 +1,7 @@
 include list_methods.inc
 
+.686
+
 .data
 
 ;;;;;;;;;; NOTE!! ALL MATH FUNCTIONS RETURN REAL4 VALUES THROUGH EAX ;;;;;;;;;
@@ -30,6 +32,10 @@ atan PROTO x:REAL4
 atanh PROTO x:REAL4
 acosh PROTO x:REAL4
 asinh PROTO x:REAL4
+
+;;;; NOT SURE HOW TO DESCRIBE THIS ;;;;
+
+random PROTO
 
 .code
 
@@ -325,3 +331,21 @@ acosh PROC,x:REAL4
 	invoke ln,eax ; asinh(x) = ln(x+sqrt(x^2+1))
 	ret
 acosh ENDP
+
+random PROC
+	push edx
+	rdtsc
+	and edx,0ffffh
+	ror eax,8
+	and eax,01111111111111111111111111111111b
+	push eax
+	fild DWORD PTR [esp]
+	push DWORD PTR 01111111111111111111111111111111b
+	fild DWORD PTR [esp]
+	pop edx
+	fdivp st(1),st
+	fstp dword ptr [esp]
+	pop eax
+	pop edx
+	ret
+random ENDP
