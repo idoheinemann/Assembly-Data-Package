@@ -109,7 +109,7 @@ matrix_load PROC,src:DWORD,dst:DWORD
 	the_loop:
 		dec ecx
 		invoke matrix_get_row,dst,ecx
-		invoke matrix_set_row,mat,ecx,eax
+		invoke matrix_set_row,src,ecx,eax
 		inc ecx
 	loop the_loop
 	pop ecx
@@ -327,17 +327,17 @@ matrix_scalar_mul PROC,mat:DWORD,scl:REAL4 ; *=
 	ret	
 matrix_scalar_mul ENDP
 
-matrix_scalar_times PROC,mat:DWORD,scl:DWORD ; *, returns a new matrix
-	mov eax,src
+matrix_scalar_times PROC,mat:DWORD,scl:REAL4 ; *, returns a new matrix
+	mov eax,mat
 	invoke new_matrix,[eax+4],[eax+8]
-	invoke matrix_load,eax,src
-	invoke matrix_scalar_mul,eax,dst
+	invoke matrix_load,eax,mat
+	invoke matrix_scalar_mul,eax,scl
 	ret
 matrix_scalar_times endp
 
 matrix_elementwize PROC,mat:DWORD,func:DWORD ; function must be stdcall, and take one REAL4 argument; equivelent to matrix = f(matrix)
 	pusha
-	mov ebx,src
+	mov ebx,mat
 	mov ecx,[ebx+4]
 	push DWORD PTR [ebx+8]
 	mov ebx,[ebx]
@@ -375,3 +375,87 @@ matrix_element_function PROC,mat:DWORD,func:DWORD ; function must be stdcall, an
 	invoke matrix_elementwize,eax,func
 	ret
 matrix_element_function endp
+
+random_matrix PROC,rows:DWORD,columns:DWORD
+	push ebx
+	push ecx
+	push edx
+	invoke Alloc,SIZEOF Matrix
+	push eax
+	mov ebx,[esp]
+	mov ecx,rows
+	mov [ebx+4],ecx
+	mov edx,columns
+	mov [ebx+8],edx
+	invoke Alloc,rows
+	mov ebx,[esp]
+	mov [ebx],eax
+	mov ecx,rows
+	rows_loop:
+		push ecx
+		invoke Alloc,columns
+		mov ebx,[esp+4]
+		mov ebx,[ebx]
+		mov edx,[esp]
+		shl edx,2
+		mov [ebx+edx-4],eax
+		mov ebx,eax
+		mov ecx,columns
+		columns_loop:
+			push ecx
+			dec ecx
+			shl ecx,2
+			invoke random
+			mov [ebx+ecx],eax
+			pop ecx
+		loop columns_loop
+		pop ecx
+	loop rows_loop
+	pop eax
+	pop edx
+	pop ecx
+	pop ebx
+	RET
+random_matrix ENDP
+
+ones_matrix PROC,rows:DWORD,columns:DWORD
+	push ebx
+	push ecx
+	push edx
+	invoke Alloc,SIZEOF Matrix
+	push eax
+	mov ebx,[esp]
+	mov ecx,rows
+	mov [ebx+4],ecx
+	mov edx,columns
+	mov [ebx+8],edx
+	invoke Alloc,rows
+	mov ebx,[esp]
+	mov [ebx],eax
+	mov ecx,rows
+	rows_loop:
+		push ecx
+		invoke Alloc,columns
+		mov ebx,[esp+4]
+		mov ebx,[ebx]
+		mov edx,[esp]
+		shl edx,2
+		mov [ebx+edx-4],eax
+		mov ebx,eax
+		mov ecx,columns
+		columns_loop:
+			push ecx
+			dec ecx
+			shl ecx,2
+			fld1
+			fstp REAL4 PTR [ebx+ecx]
+			pop ecx
+		loop columns_loop
+		pop ecx
+	loop rows_loop
+	pop eax
+	pop edx
+	pop ecx
+	pop ebx
+	RET
+ones_matrix ENDP
