@@ -21,6 +21,33 @@ matrix_set_row PROTO mat:DWORD,row:DWORD,reprow:DWORD
 matrix_add PROTO dst:DWORD,scr:DWORD ; +=
 .code
 
+
+matrix_delete PROC,mat:DWORD
+	pusha
+	mov ebx,mat
+	mov ecx,[ebx+4]
+	mov ebx,[ebx]
+	delete_loop:
+		push ecx
+		push ebx
+		
+		dec ecx
+		shl ecx,2
+
+		invoke Free,[ebx+ecx]
+
+		pop ebx
+		pop ecx
+	loop delete_loop
+
+	mov ebx,mat
+	invoke Free,[ebx]
+
+	invoke Free,mat
+	popa
+	RET
+matrix_delete ENDP
+
 zero_matrix PROC,rows:DWORD,columns:DWORD
 	push ebx
 	push ecx
@@ -81,7 +108,7 @@ matrix_set_element PROC,mat:DWORD,row:DWORD,col:DWORD,value:DWORD
 	mov ebx,col
 	shl ebx,2
 	PUSH value
-	pop DWORD PTR [eax+ebx]
+	pop DWORD PTR [eax+ebx] ; here
 	pop eax
 	pop ebx
 	ret
@@ -92,7 +119,7 @@ matrix_set_row PROC,mat:DWORD,row:DWORD,reprow:DWORD
 	invoke matrix_get_row,mat,row
 	mov ecx,mat
 	mov ecx,[ecx+8]
-	push cs
+	push ds
 	pop es
 	mov edi,eax
 	mov esi,reprow
@@ -129,8 +156,8 @@ matrix_add PROC,dst:DWORD,src:DWORD ; +=
 		push ecx
 		dec ecx
 		shl ecx,2
-		mov edi,[ebx+ecx]
-		mov esi,[eax+ecx]
+		mov edi,[eax+ecx]
+		mov esi,[ebx+ecx]
 		mov edx,[esp+4]
 		inner_loop:
 			push edx
@@ -167,8 +194,8 @@ matrix_sub PROC,dst:DWORD,src:DWORD ; -=
 		push ecx
 		dec ecx
 		shl ecx,2
-		mov edi,[ebx+ecx]
-		mov esi,[eax+ecx]
+		mov edi,[eax+ecx]
+		mov esi,[ebx+ecx]
 		mov edx,[esp+4]
 		inner_loop:
 			push edx
@@ -205,8 +232,8 @@ matrix_elementwize_mul PROC,dst:DWORD,src:DWORD ; *=
 		push ecx
 		dec ecx
 		shl ecx,2
-		mov edi,[ebx+ecx]
-		mov esi,[eax+ecx]
+		mov edi,[eax+ecx]
+		mov esi,[ebx+ecx]
 		mov edx,[esp+4]
 		inner_loop:
 			push edx
@@ -487,4 +514,97 @@ identity_matrix PROC,rows:DWORD,columns:DWORD
 	pop edx
 	pop ecx
 	RET
-identity_matrix ENDP
+identity_matrix ENDP 
+
+matrix_transpose PROC, mat:DWORD
+	push ebx
+	push ecx
+	push edx
+
+	mov ebx,mat
+	invoke zero_matrix,[ebx+8],[ebx+4]
+	mov ecx,[ebx+4]
+	push DWORD PTR [ebx+8]
+	mov ebx,eax
+	outer_loop:
+		mov edx,[esp]
+		inner_loop:
+			dec edx
+			dec ecx
+			invoke matrix_get_element,mat,ecx,edx
+			invoke matrix_set_element,ebx,edx,ecx,eax
+			inc edx
+			inc ecx
+		dec edx
+		jnz inner_loop
+	loop outer_loop
+	mov eax,ebx
+
+	pop edx
+
+	pop edx
+	pop ecx
+	pop ebx
+	ret
+matrix_transpose ENDP
+
+matrix_concat_rows PROC,mat1:DWORD, mat2:DWORD
+	push ebx
+	push ecx
+	push edx
+
+	mov ebx,mat1
+	mov ecx,[ebx+4]
+	mov ebx,mat2
+	add ecx,[ebx+4]
+	invoke zero_matrix,ecx,[ebx+8]
+	mov edx,eax
+	mov eax,mat1
+	mov ecx,[eax+4]
+	loop_1:
+		dec ecx
+		invoke matrix_get_row,mat1,ecx
+		invoke matrix_set_row,edx,ecx,eax
+		inc ecx
+	loop loop_1
+
+	mov ebx,mat1
+	mov ebx,[ebx+4]
+	mov ecx,mat2
+	mov ecx,[ecx+4]
+	loop_2:
+		dec ecx
+		invoke matrix_get_row,mat2,ecx
+		add ecx,ebx
+		invoke matrix_set_row,edx,ecx,eax
+		sub ecx,ebx
+		inc ecx
+	loop loop_2
+
+	mov eax,edx
+
+	pop edx
+	pop ecx
+	pop ebx
+	ret
+matrix_concat_rows ENDP
+
+matrix_concat_columns PROC,mat1:DWORD,mat2:DWORD
+	
+	push ebx
+
+	invoke matrix_transpose,mat1
+	mov ebx,eax
+	invoke matrix_transpose,mat2
+	push eax
+	invoke matrix_concat_rows,ebx,eax
+	invoke matrix_delete,ebx
+	pop ebx
+	invoke matrix_delete,ebx
+	mov ebx,eax
+	invoke matrix_transpose,eax
+	invoke matrix_delete,ebx
+
+	pop ebx
+	ret
+matrix_concat_columns ENDP
