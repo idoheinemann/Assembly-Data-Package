@@ -11,6 +11,68 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; MATH FUNCTIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;; MACROS ;;;;
+
+fstp_reg MACRO reg ; fstp to a register
+	sub esp, 4
+	fstp dword ptr [esp]
+	pop reg
+ENDM
+
+fst_reg MACRO reg ; fst to a register
+	sub esp, 4
+	fst dword ptr [esp]
+	pop reg
+ENDM
+
+fld_reg MACRO reg  ; name also self-explaining
+	push reg
+	fld DWORD PTR [esp]
+	pop reg
+ENDM
+
+f_add MACRO x,y ;x += y for float
+	fld REAL4 PTR x
+	fadd REAL4 PTR y
+	fstp REAL4 PTR x
+endm
+
+f_sub MACRO x,y ; x -= y for float
+	fld REAL4 PTR x
+	fsub REAL4 PTR y
+	fstp REAL4 PTR x
+endm
+
+f_mul MACRO x,y ; x *= y for float
+	fld REAL4 PTR x
+	fmul REAL4 PTR y
+	fstp REAL4 PTR x
+endm
+
+f_div MACRO x,y ; x /= y for float
+	fld REAL4 PTR x
+	fdiv REAL4 PTR y
+	fstp REAL4 PTR x
+endm
+
+f_mod MACRO x,y ; x %= y for float
+	fld REAL4 PTR x
+	fld REAL4 PTR y
+	fprem st(1),st
+	fstp st(0) ; pop
+	fstp REAL4 PTR x
+endm
+
+f_to_int MACRO x,y ; x = (int)y ;  for x is int, y is float
+	fld REAL4 PTR y
+	fistp DWORD PTR x
+endm
+
+f_to_float MACRO x,y ; x = (float)y ;  for x is float, y is int
+	fild DWORD PTR y
+	fstp REAL4 PTR x
+endm
+
 ;;;;;;;;;; NOTE!! ALL MATH FUNCTIONS RETURN REAL4 VALUES THROUGH EAX ;;;;;;;;;
 
 ;;;; SERIES ;;;;
