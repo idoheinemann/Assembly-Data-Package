@@ -360,3 +360,12 @@ adp_draw_image_scale_crop PROTO img:DWORD, draw_x:DWORD, draw_y:DWORD, draw_w:DW
 ;; paints the entire window to the specified color
 ;; @param color -> the color to paint the window
 adp_clear_screen_to_color PROTO color:DWORD
+
+
+;; deletes a button and resets all it's fields to 0
+;; @param button, the button to deletes, pointer to a Button
+adp_button_delete PROTO button:DWORD
+
+;; deletes a textfield and resets all it's fields to 0
+;; @param tf, the textfield to deletes, pointer to a TextField
+adp_textfield_delete PROTO tf:DWORD
