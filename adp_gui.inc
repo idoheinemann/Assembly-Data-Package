@@ -382,4 +382,4 @@ adp_get_main_hwnd PROTO
 
 
 ;; returns the main device handler
-adp_get_main_hdc PROC
+adp_get_main_hdc PROTO
