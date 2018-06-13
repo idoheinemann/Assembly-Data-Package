@@ -374,7 +374,7 @@ adp_button_delete PROTO,button:DWORD
 
 ;; safe deletes a textfield and resets all it's fields to 0
 ;; @param textfield -> the textfield to delete, pointer to a TextField
-adp_button_delete PROTO,textfield:DWORD
+adp_textfield_delete PROTO,textfield:DWORD
 
 
 ;; returns the main window hwnd
