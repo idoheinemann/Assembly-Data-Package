@@ -365,5 +365,17 @@ adp_draw_image_scale_crop PROTO img:DWORD, draw_x:DWORD, draw_y:DWORD, draw_w:DW
 adp_clear_screen_to_color PROTO color:DWORD
 
 
+
+;; safe deletes a button and resets all it's fields to 0
+;; @param button -> the button to delete, pointer to a Button
+adp_button_delete PROTO,button:DWORD
+
+
+
+;; safe deletes a textfield and resets all it's fields to 0
+;; @param textfield -> the textfield to delete, pointer to a TextField
+adp_button_delete PROTO,textfield:DWORD
+
+
 ;; returns the main window hwnd
 adp_get_main_hwnd PROTO
