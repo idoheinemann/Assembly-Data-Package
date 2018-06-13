@@ -32,11 +32,11 @@ adp_get_window_open PROTO
 ;; adds a function that will be invoked every time the specified key is pressed
 ;; @param key -> the key code for the activating key
 ;; @param func -> the offset of the function to be invoked when the key is pressed
+
+;; NOTE!!! the function will run on a secondary thread when the key is pressed
+;; if the function must be synchronized with the window, use adp_add_key_listener instead
 adp_add_async_key_listener PROTO key:DWORD, func:DWORD
 
-adp_handle_async_keys PROTO
-
-adp_render PROTO
 
 
 
@@ -365,10 +365,5 @@ adp_draw_image_scale_crop PROTO img:DWORD, draw_x:DWORD, draw_y:DWORD, draw_w:DW
 adp_clear_screen_to_color PROTO color:DWORD
 
 
-;; deletes a button and resets all it's fields to 0
-;; @param button, the button to deletes, pointer to a Button
-adp_button_delete PROTO button:DWORD
-
-;; deletes a textfield and resets all it's fields to 0
-;; @param tf, the textfield to deletes, pointer to a TextField
-adp_textfield_delete PROTO tf:DWORD
+;; returns the main window hwnd
+adp_get_main_hwnd PROTO
