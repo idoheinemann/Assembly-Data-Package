@@ -379,3 +379,7 @@ adp_textfield_delete PROTO,textfield:DWORD
 
 ;; returns the main window hwnd
 adp_get_main_hwnd PROTO
+
+
+;; returns the main device handler
+adp_get_main_hdc PROC
