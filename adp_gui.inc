@@ -34,6 +34,9 @@ adp_get_window_open PROTO
 ;; @param func -> the offset of the function to be invoked when the key is pressed
 adp_add_async_key_listener PROTO key:DWORD, func:DWORD
 
+adp_handle_async_keys PROTO
+
+adp_render PROTO
 
 
 
