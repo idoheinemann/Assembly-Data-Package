@@ -29,12 +29,9 @@ adp_get_window_open PROTO
 
 
 
-;; adds a function that will be invoked every time the specified key is pressed
+;; sets a function that will be invoked every time the specified key is pressed
 ;; @param key -> the key code for the activating key
 ;; @param func -> the offset of the function to be invoked when the key is pressed
-
-;; NOTE!!! the function will run on a secondary thread when the key is pressed
-;; if the function must be synchronized with the window, use adp_add_key_listener instead
 adp_add_async_key_listener PROTO key:DWORD, func:DWORD
 
 
@@ -383,3 +380,20 @@ adp_get_main_hwnd PROTO
 
 ;; returns the main device handler
 adp_get_main_hdc PROTO
+
+
+;; safe deletes an image object and sets all it's fields to 0
+;; @param img -> the image to erase, pointer to an Img
+adp_image_delete PROTO img:DWORD
+
+
+;; returns the color at the specified pixel
+;; @param x -> the x coordinate of the pixel
+;; @param y -> the y coordinate of the pixel
+adp_get_pixel PROTO x:DWORD, y:DWORD
+
+
+;; sets the icon for the application
+;; @param src -> the source of the icon image, pointer to a string 
+;; NOTE! icon images must be of type icon (.ico)
+adp_set_icon PROTO src:DWORD
