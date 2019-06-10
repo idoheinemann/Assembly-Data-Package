@@ -116,6 +116,12 @@ str_length PROTO string:DWORD
 parse_int PROTO string:DWORD ; eax = (int)string
 
 int_to_string PROTO number:DWORD ; eax = pointer to a new string , (string)number
+; Note! Use the built-in function Free after you are done using the string
+; For example:
+; invoke int_to_string, 789
+; mov some_string, eax
+; invoke StdOut, some_string
+; invoke Free, some_string
 
 concat PROTO str1:DWORD,str2:DWORD ; eax = pointer to a new string, str1+str2
 
